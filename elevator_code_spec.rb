@@ -1,5 +1,6 @@
 require_relative 'elevator_code.rb'
 require_relative 'elevator_system.rb'
+require_relative 'call_request.rb'
 
 describe ControlPanel do
 
@@ -35,22 +36,23 @@ describe ControlPanel do
 
   describe '#call' do
     it 'it should add requested floor to the queue' do
-      expect{ system.call(5) }.to change{ system.call_requests.count }.from(0).to(1)
+      expect{ system.call(5, 'up') }.to change{ system.call_requests.count }.from(0).to(1)
     end
   end  
    
   describe '#dispatch' do
     before do
-      system.call(5)
-      system.call(10)
+      system.call(5, 'up')
+      system.call(10, 'down')
       elevator.request_destination(4)
       elevator.request_destination(6)
       elevator_two.request_destination(2)
       elevator_two.request_destination(10)
     end
-    it 'finds next floor in queue' do
-      expect(system.dispatch).to eq(5)
-    end
+    # it 'finds next request in queue' do
+    #   first_call_request = system.call_requests.first
+    #   expect(system.dispatch).to eq(first_call_request)
+    # end
     it 'decreases queue by one elevator' do
       expect{system.dispatch}.to change{system.call_requests.count}.from(2).to(1)
     end
@@ -67,7 +69,8 @@ describe ControlPanel do
       elevator_two.request_destination(6)
     end
     it 'should find elevator nearest to the request' do
-      expect(system.nearest_elevator(5)).to eq(elevator_two)
+      request = CallRequest.new(5, 'up')
+      expect(system.nearest_elevator(request)).to eq(elevator_two)
     end
   end
   
@@ -130,6 +133,9 @@ describe Elevator do
   describe '#request_destination' do
     it 'should add request to requests queue' do 
       expect{elevator.request_destination(3)}.to change{elevator.destination_requests.count}.from(2).to(3)
+    end
+    it 'should not allow you to select your current floor' do
+      expect(elevator.request_destination(1)).to eq('Please choose a different floor.')
     end
   end
 

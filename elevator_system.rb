@@ -28,8 +28,8 @@ class ControlPanel
     self.elevators.each{|elevator| elevator.re_activate if elevator.column == column_number}
   end
 
-  def call(floor)
-    self.call_requests << floor
+  def call(floor, direction)
+    self.call_requests << CallRequest.new(floor, direction)
   end
 
   def dispatch
@@ -38,13 +38,13 @@ class ControlPanel
   end
 
   def nearest_elevator(destination)
-    sorted = self.elevators.sort_by{ |elevator| (elevator.current_floor - destination).abs }
+    sorted = self.elevators.sort_by{ |elevator| (elevator.current_floor - destination.floor).abs }
     sorted.select! do |elevator| 
       elevator.set_direction
-      if elevator.destination_requests.max >= destination && elevator.current_floor < destination   
-        elevator.direction == 'up' && elevator.status == 'open'
-      elsif elevator.destination_requests.min <= destination && elevator.current_floor > destination 
-        elevator.direction == 'down' && elevator.status == 'open'
+      if destination.direction == 'up' 
+        elevator.direction == 'up' && elevator.status == 'open' && elevator.current_floor < destination.floor   
+      elsif destination.direction == 'down' 
+        elevator.direction == 'down' && elevator.status == 'open' && elevator.current_floor > destination.floor 
       end 
     end
     sorted.first

@@ -17,12 +17,16 @@ class Elevator
     self.status = 'open'
   end 
 
-  def travel(floor)
-    self.current_floor = floor
+  def travel(request)
+    self.current_floor = request.floor
   end  
 
   def request_destination(destination)
-    self.destination_requests << destination
+    if destination != self.current_floor
+      self.destination_requests << destination
+    else
+      "Please choose a different floor."
+    end
   end
 
   def complete_request 
