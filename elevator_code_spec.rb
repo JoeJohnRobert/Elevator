@@ -69,6 +69,7 @@ describe ControlPanel do
       elevator_two.request_destination(6)
     end
     it 'should find elevator nearest to the request' do
+      # binding.pry
       request = CallRequest.new(5, 'up')
       expect(system.nearest_elevator(request)).to eq(elevator_two)
     end

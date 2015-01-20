@@ -39,15 +39,26 @@ class ControlPanel
 
   def nearest_elevator(destination)
     sorted = self.elevators.sort_by{ |elevator| (elevator.current_floor - destination.floor).abs }
-    sorted.select! do |elevator| 
-      elevator.set_direction
-      if destination.direction == 'up' 
-        elevator.direction == 'up' && elevator.status == 'open' && elevator.current_floor < destination.floor   
-      elsif destination.direction == 'down' 
-        elevator.direction == 'down' && elevator.status == 'open' && elevator.current_floor > destination.floor 
-      end 
-    end
-    sorted.first
+    if destination.direction == 'up'
+      find_up(sorted, destination) 
+    else 
+      find_down(sorted, destination) 
+    end 
   end
 
+  def find_up(sorted_elevators, destination)
+    sorted_elevators.select! do |elevator|
+      elevator.set_direction  
+      elevator.direction == 'up' && elevator.status == 'open' && elevator.current_floor < destination.floor
+    end
+    sorted_elevators.first
+  end
+
+  def find_down(sorted_elevators, destination)
+    sorted_elevators.select! do |elevator|
+      elevator.set_direction  
+      elevator.direction == 'down' && elevator.status == 'open' && elevator.current_floor > destination.floor 
+    end
+    sorted_elevators.first
+  end
 end
