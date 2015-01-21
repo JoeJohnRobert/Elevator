@@ -38,7 +38,9 @@ class ControlPanel
   end
 
   def nearest_elevator(destination)
-    sorted = self.elevators.sort_by{ |elevator| (elevator.current_floor - destination.floor).abs }
+    self.set_all_elevator_directions
+    sorted = self.elevators.sort_by {|elevator| (elevator.current_floor - destination.floor).abs}
+    sorted.reject! {|elevator| elevator.status == 'closed'} 
     if destination.direction == 'up'
       find_up(sorted, destination) 
     else 
@@ -46,19 +48,29 @@ class ControlPanel
     end 
   end
 
-  def find_up(sorted_elevators, destination)
-    sorted_elevators.select! do |elevator|
-      elevator.set_direction  
-      elevator.direction == 'up' && elevator.status == 'open' && elevator.current_floor < destination.floor
+  def find_up(sorted_elevators, destination) 
+    sorted_elevators.select! {|elevator| elevator.destination_requests.empty? || elevator.direction == 'up' && elevator.current_floor < destination.floor}
+    if sorted_elevators.empty?
+      next_best_elevator(destination)
+    else
+      sorted_elevators.first
     end
-    sorted_elevators.first
   end
 
   def find_down(sorted_elevators, destination)
-    sorted_elevators.select! do |elevator|
-      elevator.set_direction  
-      elevator.direction == 'down' && elevator.status == 'open' && elevator.current_floor > destination.floor 
+    sorted_elevators.select! {|elevator| elevator.destination_requests.empty? || elevator.direction == 'down' && elevator.current_floor > destination.floor}
+    if sorted_elevators.empty?
+      next_best_elevator(destination)
+    else
+      sorted.first
     end
-    sorted_elevators.first
+  end
+
+  def next_best_elevator(destination)
+    self.elevators.sort_by {|elevator| (elevator.destination_requests.last - destination.floor).abs}.first
+  end
+
+  def set_all_elevator_directions
+    self.elevators.each {|elevator| elevator.set_direction}
   end
 end

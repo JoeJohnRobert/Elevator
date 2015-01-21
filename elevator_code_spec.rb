@@ -49,32 +49,47 @@ describe ControlPanel do
       elevator_two.request_destination(2)
       elevator_two.request_destination(10)
     end
-    # it 'finds next request in queue' do
-    #   first_call_request = system.call_requests.first
-    #   expect(system.dispatch).to eq(first_call_request)
-    # end
     it 'decreases queue by one elevator' do
       expect{system.dispatch}.to change{system.call_requests.count}.from(2).to(1)
     end
     it 'sends nearest elevator to requested floor' do
-      expect{system.dispatch}.to change{elevator.current_floor}.from(3).to(5)
+      expect{system.dispatch}.to change{elevator_two.current_floor}.from(4).to(5)
     end
   end  
 
   describe '#nearest_elevator' do 
-     before do
+    before do
       elevator.request_destination(2)
       elevator.request_destination(6)
       elevator_two.request_destination(1)
       elevator_two.request_destination(6)
     end
+    
+    request = CallRequest.new(5, 'up')
+
     it 'should find elevator nearest to the request' do
-      # binding.pry
-      request = CallRequest.new(5, 'up')
       expect(system.nearest_elevator(request)).to eq(elevator_two)
+    end
+    it 'should only find active elevators' do 
+      elevator_two.status = 'closed'
+      expect(system.nearest_elevator(request)).to eq(elevator)
     end
   end
   
+  describe '#find_up' do
+
+    before do
+      elevator_two.request_destination(1)
+      elevator_two.request_destination(6)
+    end
+
+    request = CallRequest.new(5, 'up')
+
+    it 'should find elevators with no destination requests' do
+
+    end
+  end
+
   describe '#deactivate_all' do
     it 'should change each elevators status to closed and bring them to ground' do
       expect{system.deactivate_all}.to change{elevator.status && elevator_two.status}.from('open').to('closed')

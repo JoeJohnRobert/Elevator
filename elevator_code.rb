@@ -19,6 +19,7 @@ class Elevator
 
   def travel(request)
     self.current_floor = request.floor
+    self.set_direction
   end  
 
   def request_destination(destination)
@@ -35,15 +36,30 @@ class Elevator
   end
 
   def set_direction
-    if nearest_destination > self.current_floor
+    if nearest_destination == nil 
+      toggle_direction
+    elsif nearest_destination > self.current_floor
       self.direction = 'up'
-    else
+    else 
       self.direction = 'down'
     end
   end
 
+  def toggle_direction
+    if self.direction == 'up'
+      self.direction = 'down'
+    else
+      self.direction = 'up'
+    end
+  end
+
   def nearest_destination
-    self.destination_requests.sort_by{ |floor| (floor - self.current_floor).abs }.first
+    sorted = self.destination_requests.sort_by{ |floor| (floor - self.current_floor).abs }
+    if self.direction == 'up'
+      sorted.select {|floor| floor > self.current_floor}.first
+    else
+      sorted.select {|floor| floor < self.current_floor}.first
+    end
   end
 
 end
