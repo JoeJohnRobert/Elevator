@@ -62,7 +62,7 @@ class ControlPanel
     if sorted_elevators.empty?
       next_best_elevator(destination)
     else
-      sorted.first
+      sorted_elevators.first
     end
   end
 
