@@ -28,7 +28,7 @@ describe ControlPanel do
     end
   end
 
-  describe '#queue' do
+  describe '#call_requests' do
     it 'should be a collection of requested floors' do
       expect(system.call_requests).to be_kind_of(Array)
     end
@@ -79,17 +79,59 @@ describe ControlPanel do
   describe '#find_up' do
 
     before do
-      elevator_two.request_destination(1)
-      elevator_two.request_destination(6)
+      elevator.request_destination(1)
+      elevator.request_destination(6)
     end
 
     request = CallRequest.new(5, 'up')
-
+    
     it 'should find elevators with no destination requests' do
-
+      expect(system.find_up([elevator_two, elevator], request)).to eq(elevator_two)
+    end
+    it 'should find elevators with destination requests' do
+      expect(system.find_up([elevator, elevator_two], request)).to eq(elevator)
+    end
+    it 'should find next best elevator if none to sort and none going up' do
+      elevator.direction = 'down'
+      elevator_two.request_destination(10)
+      expect(system.find_up([], request)).to eq(elevator_two)
     end
   end
 
+  describe '#find_down' do
+
+    before do
+      elevator.request_destination(10)
+      elevator.request_destination(1)
+      elevator.current_floor = 7
+      elevator.direction = 'down'
+    end
+
+    request = CallRequest.new(5, 'down')
+    
+    it 'should find elevators with no destination requests' do
+      expect(system.find_down([elevator_two, elevator], request)).to eq(elevator_two)
+    end
+    it 'should find elevators with destination requests' do
+      expect(system.find_down([elevator, elevator_two], request)).to eq(elevator)
+    end
+    it 'should find next best elevator if none to sort and none going down' do
+      elevator.direction = 'up'
+      elevator_two.request_destination(10)
+      expect(system.find_down([], request)).to eq(elevator_two)
+    end
+  end  
+
+  describe '#set_all_elevator_directions' do
+    before do 
+      elevator.request_destination(1)
+    end
+
+    it 'should set the directions of all elevators' do
+      expect{system.set_all_elevator_directions}.to change{elevator.direction}.from('up').to('down')
+    end
+  end
+  
   describe '#deactivate_all' do
     it 'should change each elevators status to closed and bring them to ground' do
       expect{system.deactivate_all}.to change{elevator.status && elevator_two.status}.from('open').to('closed')
@@ -126,7 +168,8 @@ end
 
 describe Elevator do 
   let(:elevator) {Elevator.new(1)}  
-  let(:system) {ControlPanel.new(10, elevator)}
+  let(:elevator_two) {Elevator.new(2)}  
+  let(:system) {ControlPanel.new(10, elevator, elevator_two)}
 
   before do
     elevator.request_destination(4)
@@ -151,7 +194,7 @@ describe Elevator do
       expect{elevator.request_destination(3)}.to change{elevator.destination_requests.count}.from(2).to(3)
     end
     it 'should not allow you to select your current floor' do
-      expect(elevator.request_destination(1)).to eq('Please choose a different floor.')
+      expect(elevator.request_destination(1)).to eq('You are already on floor 1. Please choose a different floor.')
     end
   end
 
@@ -187,4 +230,34 @@ describe Elevator do
       expect{elevator.re_activate}.to change{elevator.status}.from('closed').to('open')
     end
   end
+
+  describe '#set_direction' do 
+    
+    before do
+      elevator.request_destination(10)
+      elevator_two.request_destination(1)
+    end 
+
+    it 'should set to up if nearest destination greater than current floor' do 
+      elevator.direction = 'down'
+      expect{elevator.set_direction}.to change{elevator.direction}.from('down').to('up')
+    end
+    it 'should set to down if nearest destination less than current floor' do 
+      elevator_two.current_floor = 4   
+      expect{elevator_two.set_direction}.to change{elevator_two.direction}.from('up').to('down')
+    end
+  end
+
+  describe '#toggle_direction' do
+    
+    before do 
+      elevator_two.direction = 'down'
+    end
+
+    it 'should toggle the elevators direction' do
+      expect{elevator.toggle_direction}.to change{elevator.direction}.from('up').to('down')
+      expect{elevator_two.toggle_direction}.to change{elevator_two.direction}.from('down').to('up')
+    end
+  end
+
 end

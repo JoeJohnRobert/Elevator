@@ -33,41 +33,41 @@ class ControlPanel
   end
 
   def dispatch
-    destination = self.call_requests.shift
-    nearest_elevator(destination).travel(destination)
+    call_request = self.call_requests.shift
+    nearest_elevator(call_request).travel(call_request)
   end
 
-  def nearest_elevator(destination)
+  def nearest_elevator(call_request)
     self.set_all_elevator_directions
-    sorted = self.elevators.sort_by {|elevator| (elevator.current_floor - destination.floor).abs}
+    sorted = self.elevators.sort_by {|elevator| (elevator.current_floor - call_request.floor).abs}
     sorted.reject! {|elevator| elevator.status == 'closed'} 
-    if destination.direction == 'up'
-      find_up(sorted, destination) 
+    if call_request.direction == 'up'
+      find_up(sorted, call_request) 
     else 
-      find_down(sorted, destination) 
+      find_down(sorted, call_request) 
     end 
   end
 
-  def find_up(sorted_elevators, destination) 
-    sorted_elevators.select! {|elevator| elevator.destination_requests.empty? || elevator.direction == 'up' && elevator.current_floor < destination.floor}
+  def find_up(sorted_elevators, call_request) 
+    sorted_elevators.select! {|elevator| elevator.destination_requests.empty? || elevator.direction == 'up' && elevator.current_floor < call_request.floor}
     if sorted_elevators.empty?
-      next_best_elevator(destination)
+      next_best_elevator(call_request)
     else
       sorted_elevators.first
     end
   end
 
-  def find_down(sorted_elevators, destination)
-    sorted_elevators.select! {|elevator| elevator.destination_requests.empty? || elevator.direction == 'down' && elevator.current_floor > destination.floor}
+  def find_down(sorted_elevators, call_request)
+    sorted_elevators.select! {|elevator| elevator.destination_requests.empty? || elevator.direction == 'down' && elevator.current_floor > call_request.floor}
     if sorted_elevators.empty?
-      next_best_elevator(destination)
+      next_best_elevator(call_request)
     else
       sorted_elevators.first
     end
   end
 
-  def next_best_elevator(destination)
-    self.elevators.sort_by {|elevator| (elevator.destination_requests.last - destination.floor).abs}.first
+  def next_best_elevator(call_request)
+    self.elevators.sort_by {|elevator| elevator.destination_requests.size}.first 
   end
 
   def set_all_elevator_directions

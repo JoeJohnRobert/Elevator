@@ -26,7 +26,7 @@ class Elevator
     if destination != self.current_floor
       self.destination_requests << destination
     else
-      "Please choose a different floor."
+      "You are already on floor #{destination}. Please choose a different floor."
     end
   end
 
@@ -36,7 +36,7 @@ class Elevator
   end
 
   def set_direction
-    if nearest_destination == nil 
+    if self.nearest_destination.nil? 
       toggle_direction
     elsif nearest_destination > self.current_floor
       self.direction = 'up'
@@ -54,7 +54,7 @@ class Elevator
   end
 
   def nearest_destination
-    sorted = self.destination_requests.sort_by{ |floor| (floor - self.current_floor).abs }
+    sorted = self.destination_requests.sort_by {|floor| (floor - self.current_floor).abs}
     if self.direction == 'up'
       sorted.select {|floor| floor > self.current_floor}.first
     else
